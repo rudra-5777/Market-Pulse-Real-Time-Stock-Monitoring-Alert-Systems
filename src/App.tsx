@@ -2,6 +2,7 @@ import React, { useState, useCallback } from 'react';
 import Header from './components/Header';
 import Sidebar from './components/Sidebar';
 import StockTable from './components/StockTable';
+import HistoricalChartView from './components/HistoricalChartView';
 import { useTheme } from './hooks/useTheme';
 import { useStockData } from './hooks/useStockData';
 import { Stock, WatchlistItem, Alert } from './types';
@@ -20,6 +21,17 @@ export default function App() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [watchedSymbols, setWatchedSymbols] = useState<Set<string>>(new Set(['AAPL', 'NVDA']));
+
+  // ── Chart view routing ─────────────────────────────────────────────────────
+  const [chartSymbol, setChartSymbol] = useState<string | null>(null);
+
+  const handleViewChart = useCallback((stock: Stock) => {
+    setChartSymbol(stock.symbol);
+  }, []);
+
+  const handleCloseChart = useCallback(() => {
+    setChartSymbol(null);
+  }, []);
 
   const handleToggleWatch = useCallback((stock: Stock) => {
     setWatchedSymbols(prev => {
@@ -64,68 +76,87 @@ export default function App() {
 
       {/* ── Body ───────────────────────────────────────────── */}
       <div className="flex min-h-[calc(100vh-57px)]">
-        {/* Sidebar */}
-        <Sidebar
-          isOpen={sidebarOpen}
-          onClose={() => setSidebarOpen(false)}
-          watchlist={watchlist}
-          alerts={DEMO_ALERTS}
-          onRemoveWatch={handleRemoveWatch}
-        />
+        {/* Sidebar – hidden while chart view is open on mobile */}
+        {!chartSymbol && (
+          <Sidebar
+            isOpen={sidebarOpen}
+            onClose={() => setSidebarOpen(false)}
+            watchlist={watchlist}
+            alerts={DEMO_ALERTS}
+            onRemoveWatch={handleRemoveWatch}
+          />
+        )}
 
         {/* Main content */}
         <main className="flex-1 p-4 sm:p-6 min-w-0">
-          {/* Stats bar */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
-            <StatCard
-              label="Total Stocks"
-              value={stocks.length.toString()}
-              icon="📋"
-            />
-            <StatCard
-              label="Advancing"
-              value={stocks.filter(s => s.percent_change > 0).length.toString()}
-              valueClass="text-emerald-500"
-              icon="▲"
-            />
-            <StatCard
-              label="Declining"
-              value={stocks.filter(s => s.percent_change < 0).length.toString()}
-              valueClass="text-red-500"
-              icon="▼"
-            />
-            <StatCard
-              label="Watchlist"
-              value={watchedSymbols.size.toString()}
-              icon="⭐"
-            />
-          </div>
+          {chartSymbol ? (
+            /* ── Historical Chart View ──────────────────────── */
+            <div className="h-[calc(100vh-57px-2rem)] min-h-[500px] -m-4 sm:-m-6">
+              <HistoricalChartView
+                initialSymbol={chartSymbol}
+                stocks={stocks}
+                watchlist={watchlist}
+                theme={theme}
+                onClose={handleCloseChart}
+              />
+            </div>
+          ) : (
+            /* ── Dashboard ─────────────────────────────────── */
+            <>
+              {/* Stats bar */}
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
+                <StatCard
+                  label="Total Stocks"
+                  value={stocks.length.toString()}
+                  icon="📋"
+                />
+                <StatCard
+                  label="Advancing"
+                  value={stocks.filter(s => s.percent_change > 0).length.toString()}
+                  valueClass="text-emerald-500"
+                  icon="▲"
+                />
+                <StatCard
+                  label="Declining"
+                  value={stocks.filter(s => s.percent_change < 0).length.toString()}
+                  valueClass="text-red-500"
+                  icon="▼"
+                />
+                <StatCard
+                  label="Watchlist"
+                  value={watchedSymbols.size.toString()}
+                  icon="⭐"
+                />
+              </div>
 
-          {/* Stock table */}
-          <StockTable
-            stocks={stocks}
-            flashMap={flashMap}
-            watchedSymbols={watchedSymbols}
-            onToggleWatch={handleToggleWatch}
-            searchQuery={searchQuery}
-          />
+              {/* Stock table */}
+              <StockTable
+                stocks={stocks}
+                flashMap={flashMap}
+                watchedSymbols={watchedSymbols}
+                onToggleWatch={handleToggleWatch}
+                onViewChart={handleViewChart}
+                searchQuery={searchQuery}
+              />
 
-          {/* Status bar */}
-          {error && (
-            <p className="mt-3 text-xs text-center text-amber-500 dark:text-amber-400">
-              ⚠ Edge Function error: {error} — showing cached data
-            </p>
+              {/* Status bar */}
+              {error && (
+                <p className="mt-3 text-xs text-center text-amber-500 dark:text-amber-400">
+                  ⚠ Edge Function error: {error} — showing cached data
+                </p>
+              )}
+              {loading && (
+                <p className="mt-3 text-xs text-center text-slate-400 animate-pulse">
+                  Loading live data from Supabase…
+                </p>
+              )}
+              <p className="mt-4 text-xs text-center text-slate-400 dark:text-slate-600">
+                {isLive
+                  ? 'Live data · Alpha Vantage via Supabase · refreshes every 15 s'
+                  : 'Data updates every 1.5 s · Prices are simulated for demonstration purposes'}
+              </p>
+            </>
           )}
-          {loading && (
-            <p className="mt-3 text-xs text-center text-slate-400 animate-pulse">
-              Loading live data from Supabase…
-            </p>
-          )}
-          <p className="mt-4 text-xs text-center text-slate-400 dark:text-slate-600">
-            {isLive
-              ? 'Live data · Alpha Vantage via Supabase · refreshes every 15 s'
-              : 'Data updates every 1.5 s · Prices are simulated for demonstration purposes'}
-          </p>
         </main>
       </div>
     </div>

@@ -30,3 +30,20 @@ export interface Alert {
 export type Theme = 'light' | 'dark';
 
 export type FlashState = 'none' | 'up' | 'down';
+
+export interface OHLCPoint {
+  /** Display label for X-axis (e.g. "10:30", "Mon", "Jan 3") */
+  date: string;
+  /** ISO timestamp – used for CSV export */
+  timestamp: string;
+  open: number;
+  high: number;
+  low: number;
+  close: number;
+  volume: number;
+  /** Derived: high − low – used by the stacked-bar candlestick renderer */
+  diff: number;
+}
+
+export type TimeFrame = '1D' | '5D' | '1M' | '1Y';
+export type ChartType = 'line' | 'candlestick';
