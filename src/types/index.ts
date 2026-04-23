@@ -25,6 +25,21 @@ export interface Alert {
   target_price: number;
   alert_type: 'above' | 'below';
   is_triggered: boolean;
+  /** Price at which the alert condition was met */
+  triggered_price?: number;
+}
+
+/** A single in-flight popup notification produced by useAlertMonitor */
+export interface AlertNotification {
+  /** Unique id for this popup instance */
+  notifId: string;
+  /** Links back to the originating Alert.id */
+  alertId: string;
+  symbol: string;
+  triggered_price: number;
+  target_price: number;
+  alert_type: 'above' | 'below';
+  timestamp: number;
 }
 
 export type Theme = 'light' | 'dark';

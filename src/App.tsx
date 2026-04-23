@@ -3,8 +3,10 @@ import Header from './components/Header';
 import Sidebar from './components/Sidebar';
 import StockTable from './components/StockTable';
 import HistoricalChartView from './components/HistoricalChartView';
+import AlertNotificationPopup from './components/AlertNotificationPopup';
 import { useTheme } from './hooks/useTheme';
 import { useStockData } from './hooks/useStockData';
+import { useAlertMonitor } from './hooks/useAlertMonitor';
 import { Stock, WatchlistItem, Alert } from './types';
 
 // Sample initial alerts for demo purposes
@@ -21,6 +23,32 @@ export default function App() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [watchedSymbols, setWatchedSymbols] = useState<Set<string>>(new Set(['AAPL', 'NVDA']));
+
+  // ── Alerts state ───────────────────────────────────────────────────────────
+  const [alerts, setAlerts] = useState<Alert[]>(DEMO_ALERTS);
+
+  const handleDeleteAlert = useCallback((alertId: string) => {
+    setAlerts(prev => prev.filter(a => a.id !== alertId));
+  }, []);
+
+  // ── Real-time alert monitoring ─────────────────────────────────────────────
+  const { notifications, dismissNotification, snoozeNotification } =
+    useAlertMonitor(stocks, alerts);
+
+  // Mark alert as triggered in state when a notification is dismissed
+  const handleDismissNotification = useCallback((notifId: string) => {
+    const notification = notifications.find(n => n.notifId === notifId);
+    if (notification) {
+      setAlerts(prev =>
+        prev.map(a =>
+          a.id === notification.alertId
+            ? { ...a, is_triggered: true, triggered_price: notification.triggered_price }
+            : a,
+        ),
+      );
+    }
+    dismissNotification(notifId);
+  }, [notifications, dismissNotification]);
 
   // ── Chart view routing ─────────────────────────────────────────────────────
   const [chartSymbol, setChartSymbol] = useState<string | null>(null);
@@ -82,8 +110,9 @@ export default function App() {
             isOpen={sidebarOpen}
             onClose={() => setSidebarOpen(false)}
             watchlist={watchlist}
-            alerts={DEMO_ALERTS}
+            alerts={alerts}
             onRemoveWatch={handleRemoveWatch}
+            onDeleteAlert={handleDeleteAlert}
           />
         )}
 
@@ -159,6 +188,13 @@ export default function App() {
           )}
         </main>
       </div>
+
+      {/* ── Alert Notification Popups ───────────────────────── */}
+      <AlertNotificationPopup
+        notifications={notifications}
+        onDismiss={handleDismissNotification}
+        onSnooze={snoozeNotification}
+      />
     </div>
   );
 }

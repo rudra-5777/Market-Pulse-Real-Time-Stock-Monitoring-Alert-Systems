@@ -7,6 +7,7 @@ interface SidebarProps {
   watchlist: WatchlistItem[];
   alerts: Alert[];
   onRemoveWatch: (symbol: string) => void;
+  onDeleteAlert: (alertId: string) => void;
 }
 
 export default function Sidebar({
@@ -15,6 +16,7 @@ export default function Sidebar({
   watchlist,
   alerts,
   onRemoveWatch,
+  onDeleteAlert,
 }: SidebarProps) {
   const sidebarRef = useRef<HTMLDivElement>(null);
 
@@ -153,9 +155,9 @@ export default function Sidebar({
               {activeAlerts.map(alert => (
                 <li
                   key={alert.id}
-                  className="flex items-center gap-2 rounded-lg px-3 py-2 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800/40"
+                  className="flex items-center gap-2 rounded-lg px-3 py-2 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800/40 group"
                 >
-                  <span className={`text-base ${alert.alert_type === 'above' ? '🔺' : '🔻'}`}>
+                  <span className="text-base">
                     {alert.alert_type === 'above' ? '🔺' : '🔻'}
                   </span>
                   <div className="min-w-0 flex-1">
@@ -164,6 +166,15 @@ export default function Sidebar({
                       {alert.alert_type === 'above' ? 'Above' : 'Below'} ${alert.target_price.toFixed(2)}
                     </p>
                   </div>
+                  <button
+                    aria-label={`Delete alert for ${alert.symbol}`}
+                    onClick={() => onDeleteAlert(alert.id)}
+                    className="opacity-0 group-hover:opacity-100 p-1 rounded text-slate-300 hover:text-red-400 transition-opacity"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
                 </li>
               ))}
             </ul>
@@ -185,15 +196,24 @@ export default function Sidebar({
                 {triggeredAlerts.map(alert => (
                   <li
                     key={alert.id}
-                    className="flex items-center gap-2 rounded-lg px-3 py-2 bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800/40 opacity-70"
+                    className="flex items-center gap-2 rounded-lg px-3 py-2 bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800/40 opacity-70 group"
                   >
                     <span>✅</span>
-                    <div className="min-w-0">
+                    <div className="min-w-0 flex-1">
                       <p className="text-sm font-bold text-slate-600 dark:text-slate-300 line-through">{alert.symbol}</p>
                       <p className="text-xs text-slate-400">
                         {alert.alert_type === 'above' ? 'Above' : 'Below'} ${alert.target_price.toFixed(2)}
                       </p>
                     </div>
+                    <button
+                      aria-label={`Delete triggered alert for ${alert.symbol}`}
+                      onClick={() => onDeleteAlert(alert.id)}
+                      className="opacity-0 group-hover:opacity-100 p-1 rounded text-slate-300 hover:text-red-400 transition-opacity"
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                    </button>
                   </li>
                 ))}
               </ul>
