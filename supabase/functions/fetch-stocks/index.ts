@@ -133,7 +133,10 @@ function calcPercentChange(current: number, previous: number): number {
 Deno.serve(async (req: Request) => {
   // Only accept POST and GET
   if (req.method !== 'POST' && req.method !== 'GET') {
-    return new Response('Method Not Allowed', { status: 405 });
+    return new Response(
+      JSON.stringify({ error: 'Method Not Allowed' }),
+      { status: 405, headers: { 'Content-Type': 'application/json' } }
+    );
   }
 
   // ── Environment ────────────────────────────────────────────────────────────

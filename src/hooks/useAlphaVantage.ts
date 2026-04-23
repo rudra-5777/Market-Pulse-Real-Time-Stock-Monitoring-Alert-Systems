@@ -141,8 +141,22 @@ export function useAlphaVantage(): UseAlphaVantageReturn {
     try {
       const { error: fnError } = await supabase.functions.invoke('fetch-stocks');
       if (fnError) {
-        console.warn('[useAlphaVantage] Edge function error:', fnError.message);
-        setError(fnError.message);
+        // JSON parse errors occur when the Edge Function is not yet deployed or
+        // returns an unexpected non-JSON body.  They are non-fatal: the Supabase
+        // real-time subscription continues to deliver live updates, so we absorb
+        // this silently rather than surfacing a confusing message to the user.
+        const msg = fnError.message ?? '';
+        if (
+          msg.includes('JSON') ||
+          msg.includes('json') ||
+          msg.toLowerCase().includes('unexpected end') ||
+          msg.toLowerCase().includes('unexpected token')
+        ) {
+          console.warn('[useAlphaVantage] Edge function returned non-JSON response (not deployed?)', msg);
+          return;
+        }
+        console.warn('[useAlphaVantage] Edge function error:', msg);
+        setError(msg);
       } else {
         setError(null);
       }
