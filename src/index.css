@@ -1,0 +1,32 @@
+/* Base Tailwind directives */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ── Scrollbar styling ─────────────────────────────────────── */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #475569; border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: #64748b; }
+
+/* ── Flash animations (used via JS className toggling) ─────── */
+@layer utilities {
+  .row-flash-green {
+    animation: flashGreen 0.8s ease-out;
+  }
+  .row-flash-red {
+    animation: flashRed 0.8s ease-out;
+  }
+}
+
+/* ── Smooth theme transitions ──────────────────────────────── */
+*, *::before, *::after {
+  transition-property: background-color, border-color, color;
+  transition-duration: 150ms;
+  transition-timing-function: ease;
+}
+
+/* Disable transition on first load to prevent flash */
+.no-transition * {
+  transition: none !important;
+}
