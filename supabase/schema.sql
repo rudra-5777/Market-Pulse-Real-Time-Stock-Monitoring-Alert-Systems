@@ -72,19 +72,27 @@ create trigger on_auth_user_created
 -- clients share a single upstream request.
 -- =============================================================
 create table if not exists public.stocks (
-  id              uuid        primary key default gen_random_uuid(),
-  symbol          text        not null unique,          -- e.g. "AAPL"
-  company_name    text        not null,                 -- e.g. "Apple Inc."
+  id              uuid           primary key default gen_random_uuid(),
+  symbol          text           not null unique,          -- e.g. "AAPL"
+  company_name    text           not null,                 -- e.g. "Apple Inc."
   current_price   numeric(12, 4) not null default 0,
-  percent_change  numeric(8,  4) not null default 0,    -- e.g. 1.23 means +1.23 %
-  volume          bigint      not null default 0,
-  last_updated_at timestamptz not null default now()
+  -- prev_price holds the price from the previous fetch cycle.
+  -- Used to compute percent_change = ((current - prev) / prev) * 100
+  prev_price      numeric(12, 4) not null default 0,
+  percent_change  numeric(8,  4) not null default 0,       -- ΔP% trend column
+  volume          bigint         not null default 0,
+  market_cap      text,                                    -- e.g. "2.95T"
+  sector          text,                                    -- e.g. "Technology"
+  last_updated_at timestamptz    not null default now()
 );
 
-comment on table  public.stocks               is 'Cached real-time stock quote data.';
-comment on column public.stocks.symbol        is 'Ticker symbol (uppercase), e.g. AAPL.';
-comment on column public.stocks.percent_change is 'Price change expressed as a percentage.';
-comment on column public.stocks.last_updated_at is 'Timestamp of the most recent data refresh.';
+comment on table  public.stocks                  is 'Cached real-time stock quote data.';
+comment on column public.stocks.symbol           is 'Ticker symbol (uppercase), e.g. AAPL.';
+comment on column public.stocks.prev_price       is 'Price captured during the previous fetch cycle.';
+comment on column public.stocks.percent_change   is 'Trend: ((current_price - prev_price) / prev_price) * 100.';
+comment on column public.stocks.market_cap       is 'Human-readable market capitalisation, e.g. 2.95T.';
+comment on column public.stocks.sector           is 'GICS sector, e.g. Technology.';
+comment on column public.stocks.last_updated_at  is 'Timestamp of the most recent data refresh.';
 
 -- Index for fast symbol look-ups
 create index if not exists stocks_symbol_idx on public.stocks (symbol);

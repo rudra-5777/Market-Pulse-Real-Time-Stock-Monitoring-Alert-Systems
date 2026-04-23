@@ -16,7 +16,7 @@ const DEMO_ALERTS: Alert[] = [
 
 export default function App() {
   const [theme, toggleTheme] = useTheme();
-  const { stocks, flashMap } = useStockData();
+  const { stocks, flashMap, loading, error, isLive } = useStockData();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [watchedSymbols, setWatchedSymbols] = useState<Set<string>>(new Set(['AAPL', 'NVDA']));
@@ -110,8 +110,21 @@ export default function App() {
             searchQuery={searchQuery}
           />
 
+          {/* Status bar */}
+          {error && (
+            <p className="mt-3 text-xs text-center text-amber-500 dark:text-amber-400">
+              ⚠ Edge Function error: {error} — showing cached data
+            </p>
+          )}
+          {loading && (
+            <p className="mt-3 text-xs text-center text-slate-400 animate-pulse">
+              Loading live data from Supabase…
+            </p>
+          )}
           <p className="mt-4 text-xs text-center text-slate-400 dark:text-slate-600">
-            Data updates every 1.5 s · Prices are simulated for demonstration purposes
+            {isLive
+              ? 'Live data · Alpha Vantage via Supabase · refreshes every 15 s'
+              : 'Data updates every 1.5 s · Prices are simulated for demonstration purposes'}
           </p>
         </main>
       </div>
