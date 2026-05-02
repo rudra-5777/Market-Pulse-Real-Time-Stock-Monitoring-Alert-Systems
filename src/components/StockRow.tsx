@@ -77,7 +77,7 @@ export default function StockRow({ stock }: Props) {
         {fmtVolume(stock.volume)}
       </td>
 
-      {/* Volume (duplicate column from table — hidden, kept for spacing) */}
+      {/* Market Cap (hidden on small screens) */}
       <td className="px-4 py-3 text-right font-mono text-gray-500 dark:text-gray-400 whitespace-nowrap hidden md:table-cell">
         {stock.marketCap}
       </td>      {/* Actions */}
